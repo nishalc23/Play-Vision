@@ -1,0 +1,183 @@
+"""
+Configuration settings for Sports Video Highlight Generator
+"""
+
+import os
+from pathlib import Path
+
+# Project paths
+PROJECT_ROOT = Path(__file__).parent.parent
+CONFIG_DIR = PROJECT_ROOT / "config"
+SRC_DIR = PROJECT_ROOT / "src"
+TESTS_DIR = PROJECT_ROOT / "tests"
+EXAMPLES_DIR = PROJECT_ROOT / "examples"
+
+# Model settings
+DEFAULT_MODEL_PATH = "yolov8n.pt"
+CONFIDENCE_THRESHOLD = 0.5
+IOU_THRESHOLD = 0.45
+
+# Detection settings
+SUPPORTED_SPORTS = ["basketball", "soccer", "football"]
+BALL_VELOCITY_THRESHOLD = 50  # pixels per frame
+GOAL_AREA_THRESHOLD = 0.1     # fraction of frame
+CROWD_MOTION_THRESHOLD = 100  # threshold for crowd detection
+
+# Video processing settings
+DEFAULT_SAMPLE_RATE = 2       # analyze every Nth frame
+DEFAULT_CLIP_DURATION = 5.0   # seconds
+CLIP_PADDING = 2.0           # seconds before/after event
+MAX_CLIP_DURATION = 30.0     # maximum clip length
+MIN_CLIP_DURATION = 1.0      # minimum clip length
+
+# Highlight merging settings
+MERGE_WINDOW = 10.0          # seconds to merge nearby events
+MIN_EVENT_SEPARATION = 3.0    # minimum time between separate events
+
+# Output settings
+DEFAULT_OUTPUT_DIR = "highlights"
+VIDEO_CODEC = "libx264"
+AUDIO_CODEC = "aac"
+VIDEO_QUALITY = "medium"     # low, medium, high
+
+# Performance settings
+MAX_WORKERS = 4              # for parallel processing
+CHUNK_SIZE = 300             # frames to process in chunks
+MEMORY_LIMIT = 4096          # MB
+
+# Logging settings
+LOG_LEVEL = "INFO"
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FILE = None              # None for stdout, or specify file path
+
+# Sport-specific settings
+SPORT_CONFIGS = {
+    "basketball": {
+        "goal_area_threshold": 0.15,
+        "ball_velocity_threshold": 60,
+        "typical_court_aspect": 1.33,  # width/height
+        "goal_positions": ["top", "bottom"],
+        "player_count_range": (8, 12),
+    },
+    "soccer": {
+        "goal_area_threshold": 0.08,
+        "ball_velocity_threshold": 40,
+        "typical_field_aspect": 1.5,   # width/height
+        "goal_positions": ["left", "right"],
+        "player_count_range": (18, 24),
+    },
+    "football": {
+        "goal_area_threshold": 0.12,
+        "ball_velocity_threshold": 45,
+        "typical_field_aspect": 1.8,   # width/height
+        "goal_positions": ["left", "right"],
+        "player_count_range": (18, 24),
+    }
+}
+
+# YOLO class mappings (COCO dataset)
+YOLO_CLASSES = {
+    "person": 0,
+    "bicycle": 1,
+    "car": 2,
+    "motorcycle": 3,
+    "airplane": 4,
+    "bus": 5,
+    "train": 6,
+    "truck": 7,
+    "boat": 8,
+    "traffic light": 9,
+    "fire hydrant": 10,
+    "stop sign": 11,
+    "parking meter": 12,
+    "bench": 13,
+    "bird": 14,
+    "cat": 15,
+    "dog": 16,
+    "horse": 17,
+    "sheep": 18,
+    "cow": 19,
+    "elephant": 20,
+    "bear": 21,
+    "zebra": 22,
+    "giraffe": 23,
+    "backpack": 24,
+    "umbrella": 25,
+    "handbag": 26,
+    "tie": 27,
+    "suitcase": 28,
+    "frisbee": 29,
+    "skis": 30,
+    "snowboard": 31,
+    "sports ball": 32,  # Important for sports detection
+    "kite": 33,
+    "baseball bat": 34,
+    "baseball glove": 35,
+    "skateboard": 36,
+    "surfboard": 37,
+    "tennis racket": 38,
+}
+
+# Classes relevant to sports detection
+SPORTS_RELEVANT_CLASSES = [
+    "person",      # Players
+    "sports ball", # Ball
+    "baseball bat",
+    "baseball glove",
+    "tennis racket",
+    "frisbee",
+    "skateboard",
+    "surfboard",
+    "skis",
+    "snowboard"
+]
+
+# Event confidence weights
+EVENT_CONFIDENCE_WEIGHTS = {
+    "ball_in_goal_area": 0.8,
+    "fast_ball_movement": 0.7,
+    "ball_disappeared": 0.6,
+    "high_player_density": 0.5,
+    "rapid_scene_change": 0.4,
+    "crowd_reaction": 0.3,
+}
+
+# File format settings
+SUPPORTED_VIDEO_FORMATS = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm']
+OUTPUT_VIDEO_FORMAT = '.mp4'
+REPORT_FORMAT = 'json'  # json, csv, xml
+
+# Development settings
+DEBUG = False
+VERBOSE = True
+PROFILE_PERFORMANCE = False
+SAVE_DEBUG_FRAMES = False
+DEBUG_OUTPUT_DIR = "debug"
+
+# Try to import local settings override
+try:
+    from config.local_settings import *
+except ImportError:
+    pass
+
+# Try to import user settings override
+try:
+    from config.user_settings import *
+except ImportError:
+    pass
+
+def get_sport_config(sport: str) -> dict:
+    """Get configuration for specific sport"""
+    return SPORT_CONFIGS.get(sport.lower(), SPORT_CONFIGS["basketball"])
+
+def validate_settings():
+    """Validate configuration settings"""
+    assert 0.0 <= CONFIDENCE_THRESHOLD <= 1.0, "Confidence threshold must be between 0 and 1"
+    assert 0.0 <= IOU_THRESHOLD <= 1.0, "IOU threshold must be between 0 and 1"
+    assert DEFAULT_SAMPLE_RATE >= 1, "Sample rate must be at least 1"
+    assert MIN_CLIP_DURATION <= DEFAULT_CLIP_DURATION <= MAX_CLIP_DURATION, "Invalid clip duration settings"
+    assert MERGE_WINDOW > MIN_EVENT_SEPARATION, "Merge window must be larger than minimum event separation"
+
+# Validate settings on import
+if __name__ != "__main__":
+    validate_settings()
